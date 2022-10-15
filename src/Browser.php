@@ -56,7 +56,7 @@ class Browser implements BrowserDriver
         return implode(' ', $args);
     }
 
-    public function buildCommand(string $binary, array $options, string $url, string $output)
+    public function buildCommand(string $binary, array $options, string $url, string $output): string
     {
         $args = $this->convertOptionsToArguments($options);
 
@@ -128,7 +128,7 @@ class Browser implements BrowserDriver
         }
 
         // If faked, retain the html, otherwise read the response from the output file
-        $html ??= trim(file_get_contents($output));
+        $html ??= trim((string) file_get_contents($output));
         @unlink($output);
 
         // If the html is empty, then fail this connection
