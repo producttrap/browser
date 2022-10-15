@@ -1,0 +1,60 @@
+{
+    "name": "producttrap/browser",
+    "type": "library",
+    "description": "A headless chromium browser driver for ProductTrap",
+    "license": "MIT",
+    "keywords": [
+        "producttrap-driver",
+        "browser"
+    ],
+    "require": {
+        "php": "^8.1",
+        "producttrap/producttrap": "^1.0"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.2",
+        "orchestra/testbench": "^7.9",
+        "pestphp/pest": "^1.22.1",
+        "phpstan/phpstan": "^1.8.8",
+        "symfony/var-dumper": "^6.1.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "ProductTrap\\Browser\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "ProductTrap\\Browser\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test:types": "phpstan analyse --ansi --memory-limit=-1",
+        "test:unit": "pest --colors=always",
+        "test": [
+            "@test:types",
+            "@test:unit"
+        ]
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "ProductTrap\\Browser\\BrowserServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../producttrap"
+        }
+    ]
+}
