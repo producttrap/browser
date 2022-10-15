@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace ProductTrap\Browser;
 
-use Illuminate\Support\ServiceProvider;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
+use Illuminate\Support\ServiceProvider;
 use ProductTrap\Contracts\BrowserFactory;
 use ProductTrap\ProductTrapBrowser;
 
@@ -22,7 +22,7 @@ class BrowserServiceProvider extends ServiceProvider
 
             /** @var array $config */
             $config = $repository->get(
-                'producttrap.browsers.' . $repository->get('producttrap.browsers.default', 'null'),
+                'producttrap.browsers.'.$repository->get('producttrap.browsers.default', 'null'),
                 [],
             );
 

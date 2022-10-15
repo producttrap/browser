@@ -8,12 +8,10 @@ use DateTime;
 use Exception;
 use ProductTrap\Contracts\BrowserDriver;
 use ProductTrap\DTOs\ScrapeResult;
-use ProductTrap\Exceptions\BrowserResultEmptyException;
 
 class Browser implements BrowserDriver
 {
     public const IDENTIFIER = 'basic_chromium';
-
 
     protected array $faked = [];
 
@@ -99,7 +97,7 @@ class Browser implements BrowserDriver
         $html = null;
 
         // If this browser was given faked responses we'll check to see if
-        if (!empty($this->faked)) {
+        if (! empty($this->faked)) {
             // Look to see if this exact URL was faked
             if (isset($this->faked[$url])) {
                 /** @var ScrapeResult $html */
@@ -146,7 +144,7 @@ class Browser implements BrowserDriver
 
         $html->data = [
             'scraped_at' => (new DateTime()),
-            'connection' => (!empty($this->faked)) ? 'faked' : 'live',
+            'connection' => (! empty($this->faked)) ? 'faked' : 'live',
         ];
 
         return $html;
