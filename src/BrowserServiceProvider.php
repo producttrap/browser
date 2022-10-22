@@ -22,7 +22,7 @@ class BrowserServiceProvider extends ServiceProvider
 
             /** @var array $config */
             $config = $repository->get(
-                'producttrap.browsers.'.$repository->get('producttrap.browsers.default', 'null'),
+                'producttrap.browsers.'.$repository->get('producttrap.browsers.default', 'basic_chromium'),
                 [],
             );
 

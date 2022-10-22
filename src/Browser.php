@@ -8,6 +8,8 @@ use DateTime;
 use Exception;
 use ProductTrap\Contracts\BrowserDriver;
 use ProductTrap\DTOs\ScrapeResult;
+use Illuminate\Support\Str;
+use Symfony\Component\Process\Process;
 
 class Browser implements BrowserDriver
 {
@@ -36,7 +38,7 @@ class Browser implements BrowserDriver
         return $this;
     }
 
-    public function convertOptionsToArguments(array $options): string
+    public function convertOptionsToArgumentsArray(array $options): array
     {
         $args = [];
 
@@ -53,45 +55,38 @@ class Browser implements BrowserDriver
             $args[] = vsprintf($format, $bindings);
         }
 
-        return implode(' ', $args);
+        return $args;
     }
 
-    public function buildCommand(string $binary, array $options, string $url, string $output): string
+    public function convertOptionsToArguments(array $options): string
     {
-        $args = $this->convertOptionsToArguments($options);
-
-        return sprintf(
-            '%s %s %s > %s',
-            $binary,           // chromium-browser
-            $args,             // --headless --dump-dom --user-agent="..." --wait-until="networkidle2"
-            $url,              // https://www.woolworths.com.au/shop/productdetails/257360/john-west-tuna-olive-oil-blend
-            $output,           // /tmp/producttrap/abc123
-        );
+        return implode(' ', $this->convertOptionsToArgumentsArray($options));
     }
 
     public function crawl(string $url, array $parameters = []): ScrapeResult
     {
-        // Generate output file
-        if (($output = tempnam(sys_get_temp_dir(), 'producttrap')) === false) {
-            throw new Exception('Could not create temporary file for browser output file.');
-        }
-
         // Build configuration from defaults and user specified
         $config = array_replace([
             'binary' => '/snap/bin/chromium',
-            'user_agent' => 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:107.0) Gecko/20100101 Firefox/106.0',
+            'user_agent' => 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:106.0) Gecko/20100101 Firefox/105.0',
         ], $this->getConfig());
 
         // Build headless chromium cli options from configuration options and user specified
         $options = array_replace([
             'headless' => true,
             'dump-dom' => true,
+            // 'window-size' => '1920,1080',
             'user-agent' => $config['user_agent'],
             'wait-until' => 'networkidle2',
         ], $config['arguments'] ?? []);
 
         // Build the command to run
-        $cmd = $this->buildCommand($config['binary'], $options, $url, $output);
+        $options = $this->convertOptionsToArgumentsArray($options);
+        $process = new Process($cmd = [
+            $config['binary'],
+            ...$options,
+            $url,
+        ]);
 
         // Specify the current result (before running CLI as null)
         $html = null;
@@ -112,33 +107,24 @@ class Browser implements BrowserDriver
 
             // If not matching either, an empty response will be returned (no command to be executed)
             $html ??= '';
-
-            // We've faked the output, may as well unlink the temp file :shrug:
-            @unlink($output);
         }
 
         // Run the command if the HTML hasn't been faked
         if ($html === null) {
-            exec($cmd);
+            $process->start();
+            $process->wait();
 
-            // If the output doesn't exist, then fail this connection
-            if (! file_exists($output)) {
-                return new ScrapeResult(result: null);
-            }
+            $html = $process->getOutput();
         }
 
-        // If faked, retain the html, otherwise read the response from the output file
-        $html ??= trim((string) file_get_contents($output));
-        @unlink($output);
-
         // If the html is empty, then fail this connection
-        if (empty((string) $html)) {
+        if (empty($html)) {
             return new ScrapeResult(result: null);
         }
 
         if (! $html instanceof ScrapeResult) {
             $html = new ScrapeResult(
-                html: (string) $html,
+                result: (string) $html,
             );
         }
 
